@@ -1,0 +1,122 @@
+<html>
+    <script type="application/javascript">
+        async function checkS3Scenario() {
+            let text = document.getElementById("s3_test_result");
+            text.innerText = "테스트 진행중..";
+            const response = await fetch(`/api/v1/rest/aws/check?type=s3`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                        apiKey: document.getElementById("s3_api_key").value,
+                        apiSecretKey: document.getElementById("s3_api_secret_key").value,
+
+                    }
+                )
+            })
+            const result = await response.json();
+            console.log(result);
+            if (result["status"] === "success") {
+                text.style.color = "green";
+                text.innerText = "API 키 테스트에 성공하였습니다.";
+            } else {
+                text.style.color = "red";
+                text.innerText = "API 키 테스트에 실패하였습니다.";
+            }
+        }
+
+        async function checkDynamoS3Scenario() {
+            let text = document.getElementById("dynamo_test_result");
+            text.innerText = "테스트 진행중..";
+            const response = await fetch(`/api/v1/rest/aws/check?type=dynamo`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                        apiKey: document.getElementById("dynamo_api_key").value,
+                        apiSecretKey: document.getElementById("dynamo_api_secret_key").value,
+                    }
+                )
+            })
+            const result = await response.json();
+            console.log(result);
+            if (result["status"] === "success") {
+                text.style.color = "green";
+                text.innerText = "API 키 테스트에 성공하였습니다.";
+            } else {
+                text.style.color = "red";
+                text.innerText = "API 키 테스트에 실패하였습니다.";
+            }
+        }
+    </script>
+    <body>
+        <h2> IAM 권한 실습 </h2>
+        <span>이 페이지는 IAM 권한 실습을 위해 만들어졌습니다.</span><br/>
+        <span>제시된 모든 권한을 확인하고, 일치하는 IAM User을 생성해 입력하고, 테스트를 눌러 확인하세요.</span><br>
+        <span> IAM 규칙에 대해서는 8주차 강의 자료를 확인하세요. </span>
+        <span> API 키 만드는 방법 </span>
+        <ol>
+            <li><a href="https://us-east-1.console.aws.amazon.com/iamv2/home?region=us-east-2#/users">AWS IAM 콘솔</a>에
+                접속합니다.
+            </li>
+            <li><b> 사용자 생성</b>을 누릅니다.</li>
+            <li>중복되지 않는 사용자명을 입력합니다. 해당 프로젝트에서는 <b>s3_user</b>로 생성하십시오.</li>
+            <li><b>직접 정책 연결</b>를 선택하고, <b>정책 생성</b>을 눌러 새 정책을 생성합니다. 요구된 정책을 JSON 형태로 모두 입력합니다.
+            </li>
+            <li>사용자 생성을 누릅니다.</li>
+            <li>AWS IAM 콘솔에서 <b>s3_user</b>을 클릭합니다.</li>
+            <li><b>요약</b> 창에서 푸른식 <span style="color: skyblue;font-weight: bold;">액세스 키 만들기</span>를 클릭합니다.</li>
+            <li><b>AWS 외부에서 실행되는 애플리케이션</b>을 선택하고, <b>다음</b>을 누릅니다.</li>
+            <li><b>액세스 키 만들기</b>를 누릅니다.</li>
+            <li>출력된 액세스 키를 입력합니다. <span
+                    style="color: red;font-weight: bolder">경고: 한번 발급된 키는 페이지를 나가면 다시 볼 수 없습니다.</span></li>
+        </ol>
+        <br><br>
+        <h3> 문제 1. S3 기본 클라이언트 </h3>
+        <span> 이 문제에서는, AWS를 통해 개인적인 데이터를 업로드와 삭제하는것을 시나리오를 가정합니다. </span>
+        <span> 해당 클라이언트 API 키는 읽기 권한과 쓰기 권한을 가져야 합니다. 파일 목록 권한은 존재해서는 안됩니다. </span><br/>
+        <span style="color:red"> 다음의 권한이 필요합니다 : </span>
+        <ul>
+            <li> S3: 버킷 생성</li>
+            <li> S3: 버킷 삭제</li>
+            <li> S3: 오브젝트 업로드</li>
+            <li> S3: 오브젝트 삭제</li>
+        </ul>
+        <form method="post" action="api/v1/rest/aws/auth">
+            <b> API 액세스 키 </b><br/>
+            <input id="s3_api_key" type="text" placeholder="AWS 액세스 키.."/><br/>
+            <b> API 비밀 액세스 키 </b><br/>
+            <input id="s3_api_secret_key" type="password" placeholder="AWS 비밀 액세스 키.."/><br/><br/>
+            <input type="button" value="테스트" onclick="checkS3Scenario()"/>
+            <span style="color: rgb(128,128,128);" id="s3_test_result"> 테스트가 수행되지 않았습니다. </span>
+        </form>
+        <h3> 문제 2. DynamoDB + S3 </h3>
+        <span> AWS를 통한 어플리케이션을 작성한다면 여러가지 데이터베이스를 사용하게 됩니다. </span>
+        <span> 이 문제에서는, AWS를 통해 DynamoDB에 사용자 데이터를 저장하고, S3에 대용량 벌크 데이터를 저장하는 시나리오를 가정합니다.</span>
+        <span> DynamoDB의 저장 및 쓰기 권한과 S3의 저장 및 목록 권한이 필요합니다. </span><br/>
+        <span style="color:red"> 다음의 권한이 필요합니다 : </span>
+        <ul>
+            <li> S3: 버킷 생성</li>
+            <li> S3: 버킷 삭제</li>
+            <li> S3: 버킷 목록</li>
+            <li> S3: 오브젝트 업로드</li>
+            <li> S3: 오브젝트 삭제</li>
+            <li> DynamoDB: 테이블 생성</li>
+            <li> DynamoDB: 테이블 삭제</li>
+            <li> DynamoDB: 테이블 서술(DescribeTable)</li>
+            <li> DynamoDB: 아이템 저장</li>
+        </ul>
+        <form method="post" action="api/v1/rest/aws/auth">
+            <b> API 액세스 키 </b><br/>
+            <input id="dynamo_api_key" type="text" placeholder="AWS 액세스 키.."/><br/>
+            <b> API 비밀 액세스 키 </b><br/>
+            <input id="dynamo_api_secret_key" type="password" placeholder="AWS 비밀 액세스 키.."/><br/><br/>
+            <input type="button" value="테스트" onclick="checkDynamoS3Scenario()"/>
+            <span style="color: rgb(128,128,128);" id="dynamo_test_result"> 테스트가 수행되지 않았습니다. </span>
+        </form>
+    </body>
+
+
+</html>
