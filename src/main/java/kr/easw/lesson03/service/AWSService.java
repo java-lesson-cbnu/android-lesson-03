@@ -99,6 +99,12 @@ public class AWSService {
         }
 
         try {
+            db.getTable("test").delete();
+        } catch (Exception ex) {
+            // Ignore..
+        }
+        try {
+
             db.createTable(new CreateTableRequest("test", Arrays.asList(new KeySchemaElement().withAttributeName("test").withKeyType(KeyType.HASH))).withAttributeDefinitions(
                     new AttributeDefinition().withAttributeName("test").withAttributeType(ScalarAttributeType.S)
             ).withProvisionedThroughput(new ProvisionedThroughput()
